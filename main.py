@@ -26,6 +26,7 @@ engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
+
 # Define the EmbeddingTable model for storing embeddings
 class EmbeddingTable(Base):
     __tablename__ = "embeddings"
@@ -34,13 +35,16 @@ class EmbeddingTable(Base):
     embedding = Column(Text, nullable=False)
     data_row = Column(Text, nullable=False)
 
+
 # Load the pre-trained model and tokenizer for generating embeddings
 tokenizer = AutoTokenizer.from_pretrained("sentence-transformers/all-MiniLM-L6-v2")
 model = AutoModel.from_pretrained("sentence-transformers/all-MiniLM-L6-v2")
 
+
 # Pydantic model for validating the query input
 class Query(BaseModel):
     text: str
+
 
 # Function to convert text to an embedding vector
 def text_to_embedding(text: str) -> np.ndarray:
@@ -48,6 +52,7 @@ def text_to_embedding(text: str) -> np.ndarray:
     with torch.no_grad():
         embedding = model(**inputs).last_hidden_state.mean(dim=1).squeeze()
     return embedding.numpy()
+
 
 # API endpoint to find the most similar row based on the input text
 @app.post("/find_related_row/")
@@ -72,7 +77,7 @@ async def find_related_row(query: Query):
         # Update the best match if a closer embedding is found
         if distance < best_distance:
             best_distance = distance
-            best_match = {"related_row": record.data_row}
+            best_match = {"related_row": record.data_row, "row_number": record.id}
 
     # Return the best matching row or raise a 404 error if no match is found
     if best_match:
