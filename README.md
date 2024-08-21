@@ -52,7 +52,7 @@ This repository is an interview task designed to crawl the main table from [qava
 3. **Set up your environment**:
 - In .env file choose for local or docker (Remember add .env to .gitignore):
    ```bash
-   DATABASE_URL=postgresql://user:password123@localhost:5432/dbname
+   DATABASE_URL=postgresql://user:password123@db:5432/dbname
 4. **Run the Crawler**:
    ```bash
    python crawler.py
