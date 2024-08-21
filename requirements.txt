@@ -9,3 +9,7 @@ scipy
 uvicorn
 transformers
 torch
+sqlalchemy
+selenium
+psycopg2-binary
+python-dotenv

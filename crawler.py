@@ -67,7 +67,7 @@ def extract_table_and_save(element: Union[Literal['table_with_header'], Literal[
     table_markdown = html2text.html2text(cleaned_html)
 
     # Save the Markdown content to a file
-    with open("main_table_output.md", "a", encoding="utf-8") as file:
+    with open("crawled_table.md", "a", encoding="utf-8") as file:
         file.write(table_markdown[:-1])
 
 try:

@@ -40,5 +40,8 @@ COPY . .
 # Expose the port that the application listens on.
 EXPOSE 8000
 
-# Run the application.
-CMD uvicorn 'main:app' --host=0.0.0.0 --port=8000
+# Make sure your Python files are executable
+RUN chmod +x store_embedding.py main.py
+
+# The command to run when the container starts
+CMD ["./entrypoint.sh"]

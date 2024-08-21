@@ -1,34 +1,43 @@
-import pandas as pd
+import os
 import numpy as np
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from transformers import AutoTokenizer, AutoModel
 import torch
 from scipy.spatial.distance import cosine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import Column, Integer, Text
+from dotenv import load_dotenv
 
 app = FastAPI()
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Get DATABASE_URL from environment variables
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    raise ValueError("DATABASE_URL is not set in the environment.")
+
+# SQLAlchemy setup
+engine = create_engine(DATABASE_URL)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
+
+
+# Define the table for embeddings
+class EmbeddingTable(Base):
+    __tablename__ = "embeddings"
+    id = Column(Integer, primary_key=True, index=True)
+    embedding = Column(Text, nullable=False)
+    data_row = Column(Text, nullable=False)
+
 
 # Load pre-trained model and tokenizer
 tokenizer = AutoTokenizer.from_pretrained("sentence-transformers/all-MiniLM-L6-v2")
 model = AutoModel.from_pretrained("sentence-transformers/all-MiniLM-L6-v2")
-
-
-# Function to load embeddings and corresponding rows from a CSV file
-def load_embeddings_and_data(file_path):
-    df = pd.read_csv(file_path)
-    embeddings = {}
-    data_rows = {}
-    for _, row in df.iterrows():
-        index = int(row["Row"])
-        embedding = np.array(row[1:-1]).astype(float)  # Exclude last column (data row)
-        data_row = row.iloc[-1]  # Last column is the original data row
-        embeddings[index] = embedding
-        data_rows[index] = data_row
-    return embeddings, data_rows
-
-
-# Load embeddings and corresponding data rows
-embeddings, data_rows = load_embeddings_and_data("embeddings.csv")
 
 
 class Query(BaseModel):
@@ -48,26 +57,27 @@ def text_to_embedding(text):
 async def find_related_row(query: Query):
     query_embedding = text_to_embedding(query.text)
 
-    # Ensure query embedding has the same shape as loaded embeddings
-    existing_embedding_shape = next(iter(embeddings.values())).shape
-    if query_embedding.shape != existing_embedding_shape:
-        raise HTTPException(
-            status_code=400,
-            detail="Embedding shape mismatch. Check your model or data processing.",
-        )
+    # Database session
+    db_session = SessionLocal()
 
-    # Find the top 4 most similar embeddings
-    top_n = 3
-    distances = []
+    # Query the embeddings from the database
+    embedding_records = db_session.query(EmbeddingTable).all()
+    db_session.close()
 
-    for index, emb in embeddings.items():
-        distance = cosine(query_embedding, emb)
-        distances.append((distance, index))
+    best_match = None
+    best_distance = float("inf")
 
-    # Sort distances and get the top N closest rows
-    distances.sort(key=lambda x: x[0])
-    top_closest_rows = [index for _, index in distances[:top_n]]
+    for record in embedding_records:
+        db_embedding = np.array(record.embedding.split(",")).astype(float)
+        distance = cosine(query_embedding, db_embedding)
 
-    # Prepare the response with the top 4 closest rows
-    results = [{"row_number": row + 1, "related_row": data_rows[row]} for row in top_closest_rows]
-    return {"top_rows": results}
+        # Check if the current distance is smaller than the best distance found so far
+        if distance < best_distance:
+            best_distance = distance
+            best_match = {"row_number": record.id, "related_row": record.data_row}
+
+    # Return the best matching row
+    if best_match:
+        return {"best_match": best_match}
+    else:
+        raise HTTPException(status_code=404, detail="No matching row found.")
