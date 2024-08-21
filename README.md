@@ -30,7 +30,7 @@ You can choose between Local or Docker Installation.
 3. **Set up your environment**:
 - In .env file choose for local or docker (Remember add .env to .gitignore):
    ```bash
-   DATABASE_URL=postgresql://user:password123@localhost:5432/dbname
+   DATABASE_URL=postgresql://user:password123@localhost:5432/db
 4. **Run the Crawler**:
    ```bash
    python crawler.py
@@ -51,7 +51,7 @@ You can choose between Local or Docker Installation.
 3. **Set up your environment**:
 - In .env file choose for local or docker (Remember add .env to .gitignore):
    ```bash
-   DATABASE_URL=postgresql://user:password123@db:5432/dbname
+   DATABASE_URL=postgresql://user:password123@db:5432/db
 4. **Run the Crawler**:
    ```bash
    python crawler.py
@@ -59,7 +59,7 @@ You can choose between Local or Docker Installation.
    ```bash
    docker compose up -d
 ### Usage
-- Once the application is running, you can access the API at http://localhost:8000/docs/find_related_row/.
+- Once the application is running, you can access the API at http://localhost:8000/docs.
 ### Recreate the Embedding Database:
 To recreate the embeddings database and start fresh:
    ```bash

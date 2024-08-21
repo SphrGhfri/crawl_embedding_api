@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 import torch
+import numpy as np
 from transformers import AutoTokenizer, AutoModel
 from sqlalchemy import create_engine, Column, Integer, Text
 from sqlalchemy.ext.declarative import declarative_base
