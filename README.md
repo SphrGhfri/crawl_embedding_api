@@ -18,9 +18,8 @@ This repository is an interview task designed to crawl the main table from [qava
 - Docker (optional, for containerized deployment)
 
 ### Installation
-
+You can choose between Local or Docker Installation.
 #### Local Setup
-
 1. **Clone the repository**:
    ```bash
    git clone https://github.com/SphrGhfri/crawl_embedding_api.git
